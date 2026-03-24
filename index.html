@@ -71,7 +71,22 @@
         "Nice job. The bar was underground and you still cleared it.",
       ];
 
-      const CASES = [
+      const GAME_PATIENT_COUNT = 10;
+
+      const AVATAR_PRESETS = [
+        { skin: "#f1c7a5", shirt: "#d97706", pants: "#475569", hair: "#422006", hairStyle: "buzz", hairHeight: "h-4", bodyScale: "scale-105", faceScale: "scale-100" },
+        { skin: "#f6d2bc", shirt: "#fb7185", pants: "#6366f1", hair: "#7c2d12", hairStyle: "long", hairHeight: "h-12", bodyScale: "scale-95", faceScale: "scale-100" },
+        { skin: "#e7bf9d", shirt: "#94a3b8", pants: "#334155", hair: "#3f3f46", hairStyle: "part", hairHeight: "h-5", bodyScale: "scale-100", faceScale: "scale-100" },
+        { skin: "#f0c9ae", shirt: "#f472b6", pants: "#7c3aed", hair: "#6b7280", hairStyle: "bob", hairHeight: "h-7", bodyScale: "scale-100", faceScale: "scale-100" },
+        { skin: "#d9b38c", shirt: "#f59e0b", pants: "#52525b", hair: "#d6d3d1", hairStyle: "ring", hairHeight: "h-5", bodyScale: "scale-110", faceScale: "scale-100" },
+        { skin: "#f4d7c0", shirt: "#f9a8d4", pants: "#60a5fa", hair: "#92400e", hairStyle: "puffs", hairHeight: "h-5", bodyScale: "scale-75", faceScale: "scale-90" },
+        { skin: "#ddb18e", shirt: "#38bdf8", pants: "#1e3a8a", hair: "#111827", hairStyle: "flat", hairHeight: "h-5", bodyScale: "scale-110", faceScale: "scale-100" },
+        { skin: "#ecc4a7", shirt: "#c4b5fd", pants: "#6b7280", hair: "#f5f5f4", hairStyle: "bun", hairHeight: "h-7", bodyScale: "scale-90", faceScale: "scale-100" },
+        { skin: "#f0c6a4", shirt: "#34d399", pants: "#374151", hair: "#374151", hairStyle: "spike", hairHeight: "h-6", bodyScale: "scale-100", faceScale: "scale-100" },
+        { skin: "#f3d0b8", shirt: "#f87171", pants: "#7c2d12", hair: "#1f2937", hairStyle: "ponytail", hairHeight: "h-9", bodyScale: "scale-95", faceScale: "scale-100" },
+      ];
+
+      const BASE_CASES = [
         {
           name: "Mike",
           age: "45M",
@@ -346,6 +361,627 @@
         },
       ];
 
+      const EXTRA_CASES = [
+        {
+          name: "Nancy",
+          age: "61F",
+          intro: '"Probably just bad tacos."',
+          complaint: "Right upper quadrant pain",
+          symptoms: ["Fever", "Pain after greasy food", "Looks miserable"],
+          labs: ["Bilirubin elevated", "Murphy sign positive"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Nancy's gallbladder turned into a biohazard. You sent her home to marinate in sepsis.",
+          optionRoasts: {
+            "Urgent Care": "Urgent care cannot vibe-check an angry gallbladder into submission.",
+            ICU: "A little dramatic, but at least Nancy keeps her organs alphabetized.",
+          },
+        },
+        {
+          name: "Tyler",
+          age: "24M",
+          intro: '"The skateboard trick was almost sick."',
+          complaint: "Ankle injury",
+          symptoms: ["Obvious deformity", "Can't bear weight", "Still says he's fine"],
+          labs: ["Pulses intact"],
+          acceptable: ["Urgent Care", "Emergency Room"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "You sent a pretzel-shaped ankle back into the wild. Admirably lazy.",
+            ICU: "Congrats on admitting a broken ankle to the penthouse suite.",
+          },
+        },
+        {
+          name: "Ravi",
+          age: "58M",
+          intro: '"Missed dialysis twice because he felt lazy, then weird."',
+          complaint: "Weakness",
+          symptoms: ["Nausea", "Feels fluttery", "Looks grey"],
+          labs: ["Potassium 7.1", "Peaked T waves"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Ravi's heart rage-quit in ventricular silence. Hyperkalemia is not a DIY problem.",
+          optionRoasts: {
+            "Emergency Room": "Close enough. Electrically spicy, but salvageable.",
+          },
+        },
+        {
+          name: "Monica",
+          age: "31F",
+          intro: '"Had a baby two weeks ago, now feels weird and dramatic about breathing."',
+          complaint: "Shortness of breath",
+          symptoms: ["Calf pain", "Tachycardia", "Anxious but not in a fun way"],
+          labs: ["O2 89%", "D-dimer elevated"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Monica had a pulmonary embolism. You called it vibes and sent her home to clot in peace.",
+          optionRoasts: {
+            ICU: "Expensive, but at least the clot loses this round.",
+          },
+        },
+        {
+          name: "Earl",
+          age: "72M",
+          intro: '"Says he has not pooped in five days and considers that character building."',
+          complaint: "Abdominal pain",
+          symptoms: ["Vomiting", "Distended belly", "No bowel movement"],
+          labs: ["Lactate elevated"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Earl was obstructed, ischemic, and absolutely not a home project.",
+          optionRoasts: {
+            "Urgent Care": "You sent a surgical abdomen to a place with one tiny sink and a Keurig.",
+            ICU: "Too much room service, but medically defensible.",
+          },
+        },
+        {
+          name: "Zoey",
+          age: "17F",
+          intro: '"Tried peanut brittle. Regretted the brittle."',
+          complaint: "Allergic reaction",
+          symptoms: ["Lip swelling", "Wheezing", "Hives everywhere"],
+          labs: ["BP 88/54"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Zoey had anaphylaxis. You effectively prescribed thoughts and prayers.",
+          optionRoasts: {
+            ICU: "Huge bill, tiny airway. Still preferable to death.",
+          },
+        },
+        {
+          name: "Kevin",
+          age: "40M",
+          intro: '"Tweaked his back lifting a couch and now pees with vibes only."',
+          complaint: "Back pain",
+          symptoms: ["Saddle anesthesia", "Leg weakness", "Urinary retention"],
+          labs: [],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Kevin's spinal cord emergency did not improve with your commitment to denial.",
+          optionRoasts: {
+            ICU: "A bit extra, but at least somebody is calling neurosurgery.",
+          },
+        },
+        {
+          name: "Marlene",
+          age: "63F",
+          intro: '"Just dizzy, except half her face forgot the assignment."',
+          complaint: "Sudden weakness",
+          symptoms: ["Facial droop", "Slurred speech", "Arm drift"],
+          labs: ["Last known well 45 minutes ago"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Marlene was having a stroke. You triaged her directly into a disability claim.",
+          optionRoasts: {
+            ICU: "Premature, but at least thrombolytics still have a chance.",
+          },
+        },
+        {
+          name: "Owen",
+          age: "26M",
+          intro: '"Swears it's just another kidney stone and also swears a lot."',
+          complaint: "Flank pain",
+          symptoms: ["Writhing", "Blood in urine", "No fever"],
+          labs: ["Creatinine normal"],
+          acceptable: ["Urgent Care", "Emergency Room"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "Honestly close, but he came for pain control, not spiritual growth.",
+            ICU: "You admitted a kidney stone to ICU. The pebble feels honored.",
+          },
+        },
+        {
+          name: "Paula",
+          age: "50F",
+          intro: '"Thought the foot wound would "air out" and become less infected."',
+          complaint: "Foot infection",
+          symptoms: ["Fever", "Red streaking", "Diabetic"],
+          labs: ["Glucose 420", "WBC 17k"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Paula's foot was auditioning for amputation and you sent it home unsupervised.",
+          optionRoasts: {
+            "Urgent Care": "Urgent care is not fixing limb-threatening diabetic chaos.",
+            ICU: "A pricey overreaction, but at least Paula stays attached to Paula.",
+          },
+        },
+        {
+          name: "Ben",
+          age: "8M",
+          intro: '"Swallowed something shiny because being eight is a disease."',
+          complaint: "Drooling",
+          symptoms: ["Can't swallow", "Chest discomfort", "Looks guilty"],
+          labs: ["X-ray: button battery in esophagus"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Ben's esophagus was being chemically exfoliated while you took the scenic route.",
+          optionRoasts: {
+            ICU: "Overkill, but no one ever died from too much button-battery respect.",
+          },
+        },
+        {
+          name: "Sheila",
+          age: "46F",
+          intro: '"Says it feels like cramps but in a terrifying, internal-bleeding way."',
+          complaint: "Lower abdominal pain",
+          symptoms: ["Dizziness", "Shoulder pain", "Positive pregnancy test"],
+          labs: ["BP 90/60"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Sheila had an ectopic pregnancy. You discharged a ticking hemorrhage.",
+          optionRoasts: {
+            ICU: "More expensive than necessary, but blood stays inside for now.",
+          },
+        },
+        {
+          name: "Marco",
+          age: "33M",
+          intro: '"Face hurts, tooth hurts, life hurts."',
+          complaint: "Dental pain",
+          symptoms: ["Mild facial swelling", "No fever", "Still talking plenty"],
+          labs: [],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You sent a dentist problem to the ER. Revolutionary inefficiency.",
+            ICU: "You admitted a molar to ICU. Somewhere, a surgeon felt nauseous.",
+          },
+        },
+        {
+          name: "Priya",
+          age: "29F",
+          intro: '"Thought it was a UTI until the kidney started freestyle screaming."',
+          complaint: "Flank pain",
+          symptoms: ["Fever", "Vomiting", "CVA tenderness"],
+          labs: ["Urinalysis full of bad news"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Priya's kidney infection graduated to sepsis while you played outpatient roulette.",
+          optionRoasts: {
+            "Urgent Care": "You sent pyelo to urgent care because apparently kidneys are optional.",
+            ICU: "A little dramatic, but at least someone gets IV antibiotics immediately.",
+          },
+        },
+        {
+          name: "Leon",
+          age: "54M",
+          intro: '"Chain smoker, now bargaining with oxygen."',
+          complaint: "Shortness of breath",
+          symptoms: ["Accessory muscle use", "Wheezing", "Blue-ish lips"],
+          labs: ["O2 86%"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Leon could not, in fact, walk off hypoxia. Bold theory though.",
+          optionRoasts: {
+            ICU: "Not wrong, just very rich in panic.",
+          },
+        },
+        {
+          name: "Sadie",
+          age: "14F",
+          intro: '"Big dance tomorrow, bigger panic tonight."',
+          complaint: "Chest tightness",
+          symptoms: ["Crying", "Tingling fingers", "Vitals normal"],
+          labs: ["EKG normal"],
+          acceptable: ["Send Home with Meds"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Urgent Care": "Not ideal, but still cheaper than a lifetime of overthinking.",
+            "Emergency Room": "You activated the hospital for teenage cortisol.",
+            ICU: "You admitted prom nerves to ICU. The corsage will never recover.",
+          },
+        },
+        {
+          name: "Carl",
+          age: "70M",
+          intro: '"Came in looking pale and insisting black stool is no big deal."',
+          complaint: "Weakness",
+          symptoms: ["Melena", "Lightheaded", "Looks like printer paper"],
+          labs: ["Hemoglobin 6.2", "BP 88/50"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Carl was actively bleeding out of both your score and his GI tract.",
+          optionRoasts: {
+            "Emergency Room": "Close enough. Somebody please get blood that isn't metaphorical.",
+          },
+        },
+        {
+          name: "Nina",
+          age: "38F",
+          intro: '"Half her face droops, but in a very non-stroke influencer way."',
+          complaint: "Facial weakness",
+          symptoms: ["Forehead involved", "No arm weakness", "Speech clear"],
+          labs: ["Vitals normal"],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You launched a Bell's palsy workup like cable news breaking coverage.",
+            ICU: "You admitted a facial nerve to ICU. It feels seen.",
+          },
+        },
+        {
+          name: "Wes",
+          age: "47M",
+          intro: '"Weekend bender, now his pancreas filed a complaint."',
+          complaint: "Epigastric pain",
+          symptoms: ["Vomiting", "Pain to back", "Sweaty"],
+          labs: ["Lipase through the roof"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Wes had pancreatitis. You prescribed optimism to an enraged organ.",
+          optionRoasts: {
+            "Urgent Care": "That pancreas needs fluids, not a strip mall pep talk.",
+            ICU: "Big spender, but at least the pancreas gets respect.",
+          },
+        },
+        {
+          name: "Tanya",
+          age: "25F",
+          intro: '"It burns when she pees and she would like society to know."',
+          complaint: "Dysuria",
+          symptoms: ["Frequency", "No flank pain", "No fever"],
+          labs: ["Urinalysis positive", "Vitals normal"],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You escalated a UTI like it had diplomatic immunity.",
+            ICU: "You sent bladder irritation to the ICU. Deeply unserious work.",
+          },
+        },
+        {
+          name: "Harold",
+          age: "81M",
+          intro: '"Slipped on a rug and his hip now points at jazz."',
+          complaint: "Hip pain",
+          symptoms: ["Leg shortened", "Cannot walk", "Grumpy for good reason"],
+          labs: [],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Harold had a broken hip. You sent an orthopedic disaster back to his rug.",
+          optionRoasts: {
+            ICU: "Excessive, but at least no one asks him to bear weight.",
+          },
+        },
+        {
+          name: "Lacey",
+          age: "34F",
+          intro: '"Sleeps in contacts because consequences are for other people."',
+          complaint: "Eye pain",
+          symptoms: ["Red eye", "Light sensitivity", "Blurred vision"],
+          labs: [],
+          acceptable: ["Urgent Care", "Emergency Room"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "Potential corneal drama deserves at least one professional adult.",
+            ICU: "You admitted an eyeball to ICU. Truly avant-garde.",
+          },
+        },
+        {
+          name: "Jorge",
+          age: "60M",
+          intro: '"Calls it indigestion while clutching his chest and back like a doomed king."',
+          complaint: "Chest pain",
+          symptoms: ["Tearing pain to back", "Sweating", "Unequal arm blood pressures"],
+          labs: ["Mediastinum widened"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Jorge's aorta was coming apart and you treated it like reflux with confidence.",
+          optionRoasts: {
+            "Emergency Room": "Close. Someone upstairs still needs to panic professionally.",
+          },
+        },
+        {
+          name: "Kim",
+          age: "27F",
+          intro: '"Says it feels like bad cramps, which is exactly how torsion scams people."',
+          complaint: "Pelvic pain",
+          symptoms: ["Sudden onset", "Vomiting", "One-sided pain"],
+          labs: ["Pelvic ultrasound pending"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Kim's ovary was twisting like a wet towel while you chose outpatient whimsy.",
+          optionRoasts: {
+            "Urgent Care": "Urgent care is not un-twisting an ovary no matter how positive the attitude.",
+            ICU: "Too much, but at least the ovary gets a fighting chance.",
+          },
+        },
+        {
+          name: "Pete",
+          age: "44M",
+          intro: '"Found a hemorrhoid and immediately made it everyone’s business."',
+          complaint: "Rectal pain",
+          symptoms: ["Small amount of bright red blood", "Vitals normal", "Walking and complaining fine"],
+          labs: [],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You spent ER resources on a dramatic butt.",
+            ICU: "You admitted a hemorrhoid to ICU. History will mock you.",
+          },
+        },
+        {
+          name: "Rosa",
+          age: "56F",
+          intro: '"Had a kidney stone yesterday. Today the kidney stone brought sepsis."',
+          complaint: "Flank pain",
+          symptoms: ["Fever", "Shaking chills", "Looks toxic"],
+          labs: ["WBC 19k", "BP 90/58"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Rosa had an infected obstructing stone. You triaged her straight into organ failure.",
+          optionRoasts: {
+            "Emergency Room": "Close enough if someone moves very, very fast.",
+          },
+        },
+        {
+          name: "Gavin",
+          age: "30M",
+          intro: '"Took a helmet-free spill and now keeps asking what year it is."',
+          complaint: "Head injury",
+          symptoms: ["Vomiting", "Confused", "Headache"],
+          labs: ["Witnessed loss of consciousness"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Gavin's brain was not comforted by your decision to discharge it.",
+          optionRoasts: {
+            "Urgent Care": "This is not an urgent care concussion, this is a CT scanner invitation.",
+            ICU: "A lot, but better than pretending brains are self-healing crystals.",
+          },
+        },
+        {
+          name: "Irene",
+          age: "64F",
+          intro: '"Her ankles are swollen, her lungs are wet, and gravity is winning."',
+          complaint: "Shortness of breath",
+          symptoms: ["Orthopnea", "Leg swelling", "Crackles"],
+          labs: ["BNP elevated", "O2 88%"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Irene was drowning from the inside and you sent her home to marinate.",
+          optionRoasts: {
+            "Urgent Care": "That urgent care nebulizer is not fixing heart failure.",
+            ICU: "Big swing, but at least fluid starts losing.",
+          },
+        },
+        {
+          name: "Luke",
+          age: "21M",
+          intro: '"Had unprotected sex and would like immediate medieval punishment for anxiety."',
+          complaint: "STD concern",
+          symptoms: ["No symptoms", "Vitals normal", "Lots of regret"],
+          labs: [],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You used emergency medicine for delayed consequences.",
+            ICU: "You admitted guilt to ICU. Strong narrative choice.",
+          },
+        },
+        {
+          name: "Beth",
+          age: "48F",
+          intro: '"Stopped taking insulin because she "felt better" for an hour."',
+          complaint: "Vomiting",
+          symptoms: ["Abdominal pain", "Deep breathing", "Confused"],
+          labs: ["Glucose 640", "Anion gap huge", "Ketones positive"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Beth had DKA. You discharged a chemistry set with a pulse.",
+          optionRoasts: {
+            "Emergency Room": "Close enough, but someone upstairs still wants to babysit that acidosis.",
+          },
+        },
+        {
+          name: "Noah",
+          age: "5M",
+          intro: '"Sounds like a squeaky toy and breathes like one too."',
+          complaint: "Barking cough",
+          symptoms: ["Stridor at rest", "Retractions", "Agitated"],
+          labs: [],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Noah needed real airway management, not your confidence in childhood resilience.",
+          optionRoasts: {
+            ICU: "Expensive, but breathing remains fashionable.",
+          },
+        },
+        {
+          name: "Claudia",
+          age: "73F",
+          intro: '"Has a headache and also suddenly hates vision in one eye."',
+          complaint: "Headache",
+          symptoms: ["Jaw pain chewing", "Scalp tenderness", "Blurred vision"],
+          labs: ["ESR elevated"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Claudia's vision was on the chopping block and you sent her home to gamble with blindness.",
+          optionRoasts: {
+            "Urgent Care": "Temporal arteritis is above the pay grade of a place next to a frozen yogurt shop.",
+            ICU: "Dramatic, but nobody goes blind because you were too cautious.",
+          },
+        },
+        {
+          name: "Derek",
+          age: "39M",
+          intro: '"Thought it was a bad UTI until his kidney started filing complaints."',
+          complaint: "Flank pain",
+          symptoms: ["Fever", "Shaking", "Vomiting"],
+          labs: ["Urinalysis positive", "Tachycardic"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText: "Derek had pyelonephritis and you prescribed hydration like a podcast host.",
+          optionRoasts: {
+            "Urgent Care": "Not enough horsepower for this amount of infected kidney.",
+            ICU: "A touch dramatic, but the kidney appreciates the attention.",
+          },
+        },
+        {
+          name: "Mimi",
+          age: "32F",
+          intro: '"Got a rash from detergent and an entire personality from it."',
+          complaint: "Itchy rash",
+          symptoms: ["No airway symptoms", "Vitals normal", "Hives only"],
+          labs: [],
+          acceptable: ["Send Home with Meds"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Urgent Care": "Reasonable-ish, but still more building than she required.",
+            "Emergency Room": "You spent ER bandwidth on laundry revenge.",
+            ICU: "You admitted Tide-related drama to ICU. Phenomenal waste.",
+          },
+        },
+        {
+          name: "Stan",
+          age: "58M",
+          intro: '"Turned yellow "kind of gradually" and somehow thought that was reassuring."',
+          complaint: "Jaundice",
+          symptoms: ["Itching", "Dark urine", "No instability"],
+          labs: ["Bilirubin elevated", "Vitals normal"],
+          acceptable: ["Urgent Care", "Emergency Room"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "He needs a workup, not a motivational speech.",
+            ICU: "You admitted jaundice to ICU. The liver is flattered.",
+          },
+        },
+        {
+          name: "Ava",
+          age: "6F",
+          intro: '"Got swung by the arms and now carries one like a tiny aristocrat."',
+          complaint: "Arm pain",
+          symptoms: ["Won't use arm", "No deformity", "Otherwise thriving"],
+          labs: [],
+          acceptable: ["Urgent Care"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "Close, but someone should probably pop that radial head back in.",
+            "Emergency Room": "You called the ER for a toddler arm trick urgent care does before lunch.",
+            ICU: "You admitted nursemaid's elbow to ICU. Magnificent nonsense.",
+          },
+        },
+        {
+          name: "Quentin",
+          age: "46M",
+          intro: '"Leg is red, hot, and apparently a huge surprise to him."',
+          complaint: "Leg redness",
+          symptoms: ["Mild fever", "Walking okay", "No abscess"],
+          labs: ["WBC mildly elevated"],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You escalated cellulitis like it insulted your family.",
+            ICU: "You admitted a skin infection to ICU. The derm nerds are furious.",
+          },
+        },
+        {
+          name: "Blake",
+          age: "23M",
+          intro: '"Thinks testicular torsion is just gym soreness, which is tragic optimism."',
+          complaint: "Severe testicular pain",
+          symptoms: ["Sudden onset", "Nausea", "High-riding testicle"],
+          labs: [],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Blake's testicle was twisting against time and you basically chose infertility fan fiction.",
+          optionRoasts: {
+            ICU: "Too much, but at least the gonad gets a shot.",
+          },
+        },
+        {
+          name: "Helena",
+          age: "57F",
+          intro: '"Calls it a "blood pressure day" while seeing floaters and doom."',
+          complaint: "Headache",
+          symptoms: ["Blurred vision", "Chest pressure", "Nausea"],
+          labs: ["BP 230/130"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText: "Helena was speedrunning a hypertensive emergency and you waved from the sidelines.",
+          optionRoasts: {
+            "Emergency Room": "Close, but someone upstairs still needs to drip the pressure down carefully.",
+          },
+        },
+        {
+          name: "Mason",
+          age: "18M",
+          intro: '"Stubbed his toe so hard he came to the hospital for closure."',
+          complaint: "Toe pain",
+          symptoms: ["Minor swelling", "Can walk", "Exists loudly"],
+          labs: [],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Emergency Room": "You deployed emergency medicine at a toe having a personality.",
+            ICU: "You admitted a toe to ICU. Art, honestly.",
+          },
+        },
+      ];
+
+      const CASES = BASE_CASES.concat(EXTRA_CASES).map((patient, index) => ({
+        ...patient,
+        avatar: patient.avatar || AVATAR_PRESETS[index % AVATAR_PRESETS.length],
+      }));
+
       const TIMER_SECONDS = 15;
       const FEEDBACK_MS = 2400;
 
@@ -357,6 +993,8 @@
         }).format(value);
 
       const pickRandom = (items) => items[Math.floor(Math.random() * items.length)];
+      const shuffleArray = (items) => [...items].sort(() => Math.random() - 0.5);
+      const buildShift = () => shuffleArray(CASES).slice(0, GAME_PATIENT_COUNT);
 
       function Hair({ avatar }) {
         const baseStyle = { backgroundColor: avatar.hair };
@@ -550,6 +1188,7 @@
 
       function App() {
         const [phase, setPhase] = useState("home");
+        const [currentShift, setCurrentShift] = useState(() => buildShift());
         const [patientIndex, setPatientIndex] = useState(0);
         const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
         const [livesSaved, setLivesSaved] = useState(0);
@@ -560,11 +1199,11 @@
         const [usedChoices, setUsedChoices] = useState([]);
         const nextTimeoutRef = useRef(null);
 
-        const patient = CASES[patientIndex];
+        const patient = currentShift[patientIndex];
 
         const progressLabel = useMemo(
-          () => `${Math.min(patientIndex + 1, CASES.length)}/${CASES.length}`,
-          [patientIndex]
+          () => `${Math.min(patientIndex + 1, currentShift.length)}/${currentShift.length || GAME_PATIENT_COUNT}`,
+          [patientIndex, currentShift]
         );
 
         useEffect(() => {
@@ -600,6 +1239,7 @@
             nextTimeoutRef.current = null;
           }
           setPhase("home");
+          setCurrentShift(buildShift());
           setPatientIndex(0);
           setTimeLeft(TIMER_SECONDS);
           setLivesSaved(0);
@@ -612,6 +1252,7 @@
 
         const startGame = () => {
           setPhase("playing");
+          setCurrentShift(buildShift());
           setPatientIndex(0);
           setTimeLeft(TIMER_SECONDS);
           setLivesSaved(0);
@@ -628,7 +1269,7 @@
         };
 
         const goNext = () => {
-          if (patientIndex >= CASES.length - 1) {
+          if (patientIndex >= currentShift.length - 1) {
             finishGame();
             return;
           }
