@@ -1478,6 +1478,14 @@
           setFeedback(null);
         };
 
+        const advanceNow = () => {
+          if (nextTimeoutRef.current) {
+            window.clearTimeout(nextTimeoutRef.current);
+            nextTimeoutRef.current = null;
+          }
+          goNext();
+        };
+
         const goNext = () => {
           if (patientIndex >= currentShift.length - 1) {
             finishGame();
@@ -1800,15 +1808,23 @@
 
                   {feedback && (
                     <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-900 p-4 text-white shadow-lg sm:mt-6 sm:rounded-[1.5rem] sm:p-5">
-                      <div className="flex flex-wrap items-center justify-between gap-3">
-                        <div>
+                    <div className="flex flex-wrap items-center justify-between gap-3">
+                      <div>
                           <p className="text-xs font-bold uppercase tracking-[0.24em] text-slate-400 sm:text-sm">
                             {feedback.title}
                           </p>
                           <h3 className="mt-2 text-xl font-black sm:text-2xl">{feedback.choice}</h3>
                         </div>
-                        <div className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-slate-200 sm:text-sm">
-                          {feedback.savedDelta ? "+1 life" : "+0 lives"} / {currency(feedback.moneyDelta)} damage
+                        <div className="flex items-center gap-2">
+                          <div className="rounded-full bg-white/10 px-4 py-2 text-xs font-bold text-slate-200 sm:text-sm">
+                            {feedback.savedDelta ? "+1 life" : "+0 lives"} / {currency(feedback.moneyDelta)} damage
+                          </div>
+                          <button
+                            onClick={advanceNow}
+                            className="rounded-full bg-sky-500 px-4 py-2 text-xs font-bold text-white transition hover:bg-sky-400 sm:text-sm"
+                          >
+                            Next
+                          </button>
                         </div>
                       </div>
                       <p className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200 sm:text-sm">
@@ -1821,7 +1837,7 @@
               </div>
             </div>
             <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-3 py-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur sm:hidden">
-              <div className="mx-auto grid max-w-6xl grid-cols-[1fr_1fr_auto] gap-2">
+              <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
                 <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-center">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Lives</div>
                   <div className="text-lg font-black text-emerald-800">{livesSaved}/10</div>
@@ -1829,6 +1845,10 @@
                 <div className="rounded-2xl bg-rose-50 px-3 py-2 text-center">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-700">Money</div>
                   <div className="text-lg font-black text-rose-800">{currency(moneyWasted)}</div>
+                </div>
+                <div className="rounded-2xl bg-sky-50 px-3 py-2 text-center">
+                  <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-700">Patient</div>
+                  <div className="text-lg font-black text-sky-800">{progressLabel}</div>
                 </div>
                 <div className="rounded-2xl bg-slate-900 px-3 py-2 text-center text-white">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">Time</div>
