@@ -215,7 +215,7 @@ const CASES = [
 ];
 
 const MALPRACTICE_COST = 275000;
-const TIMER_SECONDS = 10;
+const TIMER_SECONDS = 15;
 const FEEDBACK_MS = 2400;
 
 const currency = (value) =>
