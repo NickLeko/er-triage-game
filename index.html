@@ -1702,7 +1702,7 @@
         }
 
         return (
-          <div className="min-h-screen px-3 py-2 pb-28 text-slate-900 sm:px-4 sm:py-6 sm:pb-6">
+          <div className="min-h-screen px-3 py-2 pb-32 text-slate-900 sm:px-4 sm:py-6 sm:pb-6">
             <div className="mx-auto max-w-6xl">
               <div className="mb-4 flex items-center justify-between gap-3 rounded-[1.5rem] border border-white/70 bg-white/80 px-4 py-3 shadow-soft backdrop-blur sm:mb-6 sm:flex-wrap sm:gap-4 sm:rounded-[2rem] sm:px-6 sm:py-5">
                 <div>
@@ -1836,23 +1836,23 @@
                 </div>
               </div>
             </div>
-            <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-3 py-3 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur sm:hidden">
+            <div className="fixed inset-x-0 bottom-0 z-20 border-t border-slate-200 bg-white/95 px-3 py-2 shadow-[0_-12px_30px_rgba(15,23,42,0.12)] backdrop-blur sm:hidden">
               <div className="mx-auto grid max-w-6xl grid-cols-2 gap-2">
-                <div className="rounded-2xl bg-emerald-50 px-3 py-2 text-center">
+                <div className="rounded-xl bg-emerald-50 px-3 py-1.5 text-center">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-emerald-700">Lives</div>
-                  <div className="text-lg font-black text-emerald-800">{livesSaved}/10</div>
+                  <div className="text-base font-black text-emerald-800">{livesSaved}/10</div>
                 </div>
-                <div className="rounded-2xl bg-rose-50 px-3 py-2 text-center">
+                <div className="rounded-xl bg-rose-50 px-3 py-1.5 text-center">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-rose-700">Money</div>
-                  <div className="text-lg font-black text-rose-800">{currency(moneyWasted)}</div>
+                  <div className="text-base font-black text-rose-800">{currency(moneyWasted)}</div>
                 </div>
-                <div className="rounded-2xl bg-sky-50 px-3 py-2 text-center">
+                <div className="rounded-xl bg-sky-50 px-3 py-1.5 text-center">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-sky-700">Patient</div>
-                  <div className="text-lg font-black text-sky-800">{progressLabel}</div>
+                  <div className="text-base font-black text-sky-800">{progressLabel}</div>
                 </div>
-                <div className="rounded-2xl bg-slate-900 px-3 py-2 text-center text-white">
+                <div className="rounded-xl bg-slate-900 px-3 py-1.5 text-center text-white">
                   <div className="text-[10px] font-bold uppercase tracking-[0.18em] text-slate-300">Time</div>
-                  <div className={"text-lg font-black " + (timeLeft <= 3 ? "text-rose-300" : "text-white")}>
+                  <div className={"text-base font-black " + (timeLeft <= 3 ? "text-rose-300" : "text-white")}>
                     {timeLeft}s
                   </div>
                 </div>
