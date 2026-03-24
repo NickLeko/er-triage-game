@@ -1125,6 +1125,31 @@
       const pickRandom = (items) => items[Math.floor(Math.random() * items.length)];
       const shuffleArray = (items) => [...items].sort(() => Math.random() - 0.5);
       const buildShift = () => shuffleArray(CASES).slice(0, GAME_PATIENT_COUNT);
+      const toSentenceList = (items) => {
+        if (!items.length) return "";
+        if (items.length === 1) return items[0];
+        if (items.length === 2) return `${items[0]} and ${items[1]}`;
+        return `${items.slice(0, -1).join(", ")}, and ${items[items.length - 1]}`;
+      };
+
+      function getPatientMood(patient) {
+        const text = `${patient.complaint} ${patient.symptoms.join(" ")} ${patient.labs.join(" ")}`.toLowerCase();
+        if (text.includes("crying") || text.includes("panic") || text.includes("anxious")) return "anxious";
+        if (text.includes("fever") || text.includes("warm skin") || text.includes("hives")) return "flushed";
+        if (text.includes("confused") || text.includes("slurred") || text.includes("weakness")) return "dazed";
+        if (text.includes("chest pain") || text.includes("shortness of breath") || text.includes("hypoxia") || text.includes("wheezing")) return "distressed";
+        if (text.includes("vomiting") || text.includes("nausea") || text.includes("abdominal pain")) return "sick";
+        return "calm";
+      }
+
+      function getWhyLine(patient, choice, isAcceptable, timedOut) {
+        const cluePool = [...patient.symptoms, ...patient.labs];
+        const clues = cluePool.slice(0, Math.min(2, cluePool.length));
+        const clueText = clues.length ? toSentenceList(clues) : patient.complaint;
+        const target = isAcceptable ? `fit ${choice}` : `pointed away from ${choice}`;
+        const timeoutPrefix = timedOut ? "Clock panic aside, " : "";
+        return `${timeoutPrefix}${patient.complaint}${clueText ? ` with ${clueText}` : ""} ${target}.`;
+      }
 
       function Hair({ avatar }) {
         const baseStyle = { backgroundColor: avatar.hair };
@@ -1205,6 +1230,37 @@
 
       function MiiPatient({ patient, compact = false }) {
         const avatar = patient.avatar;
+        const mood = getPatientMood(patient);
+        const eyeClass =
+          mood === "anxious"
+            ? "top-10 h-2.5 w-3 rounded-full"
+            : mood === "dazed"
+              ? "top-10 h-2 w-3 rounded-full"
+              : mood === "distressed"
+                ? "top-[2.35rem] h-3 w-3 rounded-full"
+                : "top-10 h-2.5 w-2.5 rounded-full";
+        const blushClass =
+          mood === "flushed" || mood === "sick" ? "opacity-90" : mood === "anxious" ? "opacity-70" : "opacity-40";
+        const mouthClass =
+          mood === "anxious"
+            ? "w-5 rounded-full"
+            : mood === "distressed"
+              ? "h-2.5 w-3.5 rounded-full"
+              : mood === "dazed"
+                ? "w-4 rounded-sm"
+                : mood === "sick"
+                  ? "w-5 rounded-full"
+                  : "w-6 rounded-full";
+        const mouthStyle =
+          mood === "anxious"
+            ? { borderBottom: "3px solid #334155", transform: "rotate(180deg)" }
+            : mood === "distressed"
+              ? { backgroundColor: "#334155" }
+              : mood === "dazed"
+                ? { backgroundColor: "#334155" }
+                : mood === "sick"
+                  ? { borderBottom: "3px solid #334155", transform: "rotate(180deg)" }
+                  : { backgroundColor: "#334155" };
         return (
           <div className={"relative " + (compact ? "scale-[0.72] sm:scale-90" : avatar.bodyScale)}>
             <div className={"relative mx-auto h-24 w-20 " + avatar.faceScale}>
@@ -1213,11 +1269,13 @@
                 style={{ backgroundColor: avatar.skin }}
               />
               <Hair avatar={avatar} />
-              <div className="absolute left-5 top-10 h-2.5 w-2.5 rounded-full bg-slate-700" />
-              <div className="absolute right-5 top-10 h-2.5 w-2.5 rounded-full bg-slate-700" />
-              <div className="absolute left-[1.65rem] top-[3.55rem] h-1.5 w-8 rounded-full bg-rose-300 opacity-70" />
+              <div className={"absolute left-5 bg-slate-700 " + eyeClass} />
+              <div className={"absolute right-5 bg-slate-700 " + eyeClass} />
+              <div className={"absolute left-[1.65rem] top-[3.55rem] h-1.5 w-8 rounded-full bg-rose-300 " + blushClass} />
               <div className="absolute left-[2.05rem] top-[3.05rem] h-4 w-2 rounded-full border-r-2 border-slate-600" />
-              <div className="absolute left-[1.95rem] top-[4.35rem] h-1.5 w-6 rounded-full bg-slate-700" />
+              <div className={"absolute left-[1.95rem] top-[4.35rem] " + mouthClass} style={mouthStyle} />
+              {mood === "distressed" && <div className="absolute right-3 top-8 h-4 w-2 rounded-full bg-sky-300 rotate-12 opacity-80" />}
+              {mood === "anxious" && <div className="absolute left-2 top-7 h-3 w-1.5 rounded-full bg-sky-200 -rotate-12 opacity-80" />}
             </div>
             <div
               className="mx-auto mt-1 h-24 w-24 rounded-[2rem] border-4 border-slate-700"
@@ -1455,6 +1513,7 @@
             title: isAcceptable ? "Patient Mostly Survived" : "Administrative Disaster",
             choice,
             roast,
+            why: getWhyLine(patient, choice, isAcceptable, timedOut),
             savedDelta,
             moneyDelta,
           });
@@ -1674,37 +1733,33 @@
                     </div>
                   </div>
 
-                  <div className="mt-4 grid gap-4 md:grid-cols-2 sm:mt-6 sm:gap-5">
-                    <div className="rounded-[1.25rem] bg-slate-50 p-3 sm:rounded-[1.5rem] sm:p-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500 sm:text-sm">Symptoms</p>
-                      <div className="mt-2 flex flex-wrap gap-2 sm:mt-3">
-                        {patient.symptoms.map((symptom) => (
-                          <span
-                            key={symptom}
-                            className="rounded-full border border-slate-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 sm:py-2 sm:text-sm"
-                          >
-                            {symptom}
-                          </span>
-                        ))}
+                  <div className="mt-4 rounded-[1.25rem] border border-slate-200 bg-slate-50 p-3 sm:mt-6 sm:rounded-[1.5rem] sm:p-4">
+                    <p className="text-xs font-bold uppercase tracking-[0.22em] text-slate-500 sm:text-sm">Clinical Summary</p>
+                    <div className="mt-3 grid gap-4 md:grid-cols-2">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-slate-400 sm:text-xs">Symptoms</p>
+                        <ul className="mt-2 space-y-2 text-sm text-slate-700">
+                          {patient.symptoms.map((symptom) => (
+                            <li key={symptom} className="rounded-xl bg-white px-3 py-2 font-semibold shadow-sm">
+                              {symptom}
+                            </li>
+                          ))}
+                        </ul>
                       </div>
-                    </div>
-
-                    <div className="rounded-[1.25rem] bg-rose-50 p-3 sm:rounded-[1.5rem] sm:p-4">
-                      <p className="text-xs font-bold uppercase tracking-[0.22em] text-rose-500 sm:text-sm">Labs</p>
-                      <div className="mt-2 flex flex-wrap gap-2 sm:mt-3">
+                      <div>
+                        <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-rose-400 sm:text-xs">Labs / Data</p>
                         {patient.labs.length ? (
-                          patient.labs.map((lab) => (
-                            <span
-                              key={lab}
-                              className="rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-700 sm:py-2 sm:text-sm"
-                            >
-                              {lab}
-                            </span>
-                          ))
+                          <ul className="mt-2 space-y-2 text-sm text-slate-700">
+                            {patient.labs.map((lab) => (
+                              <li key={lab} className="rounded-xl bg-white px-3 py-2 font-semibold shadow-sm">
+                                {lab}
+                              </li>
+                            ))}
+                          </ul>
                         ) : (
-                          <span className="rounded-full border border-rose-200 bg-white px-3 py-1.5 text-xs font-semibold text-slate-500 sm:py-2 sm:text-sm">
+                          <div className="mt-2 rounded-xl bg-white px-3 py-2 text-sm font-semibold text-slate-500 shadow-sm">
                             No dramatic labs. Yet.
-                          </span>
+                          </div>
                         )}
                       </div>
                     </div>
@@ -1739,6 +1794,9 @@
                           {feedback.savedDelta ? "+1 life" : "+0 lives"} / {currency(feedback.moneyDelta)} damage
                         </div>
                       </div>
+                      <p className="mt-3 rounded-xl bg-white/10 px-3 py-2 text-xs font-semibold uppercase tracking-[0.16em] text-slate-200 sm:text-sm">
+                        Why: {feedback.why}
+                      </p>
                       <p className="mt-3 text-sm leading-relaxed text-slate-100 sm:mt-4 sm:text-lg">{feedback.roast}</p>
                     </div>
                   )}
