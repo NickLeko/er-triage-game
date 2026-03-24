@@ -1459,6 +1459,7 @@
         };
 
         const startGame = () => {
+          window.scrollTo({ top: 0, behavior: "auto" });
           setPhase("playing");
           setCurrentShift(buildShift());
           setPatientIndex(0);
@@ -1469,6 +1470,7 @@
           setGameOver(false);
           setQuit(false);
           setUsedChoices([]);
+          window.setTimeout(() => window.scrollTo({ top: 0, behavior: "auto" }), 0);
         };
 
         const finishGame = () => {
