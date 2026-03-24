@@ -1133,6 +1133,7 @@
       };
 
       function getPatientMood(patient) {
+        if (!patient) return "calm";
         const text = `${patient.complaint} ${patient.symptoms.join(" ")} ${patient.labs.join(" ")}`.toLowerCase();
         if (text.includes("crying") || text.includes("panic") || text.includes("anxious")) return "anxious";
         if (text.includes("fever") || text.includes("warm skin") || text.includes("hives")) return "flushed";
@@ -1143,12 +1144,62 @@
       }
 
       function getWhyLine(patient, choice, isAcceptable, timedOut) {
+        if (!patient) return "No case details loaded. Medicine remains mysterious.";
         const cluePool = [...patient.symptoms, ...patient.labs];
         const clues = cluePool.slice(0, Math.min(2, cluePool.length));
         const clueText = clues.length ? toSentenceList(clues) : patient.complaint;
         const target = isAcceptable ? `fit ${choice}` : `pointed away from ${choice}`;
         const timeoutPrefix = timedOut ? "Clock panic aside, " : "";
         return `${timeoutPrefix}${patient.complaint}${clueText ? ` with ${clueText}` : ""} ${target}.`;
+      }
+
+      function getFaceDetails(mood) {
+        if (mood === "anxious") {
+          return {
+            eyeClass: "top-10 h-2.5 w-3 rounded-full",
+            blushClass: "opacity-70",
+            mouthClass: "w-5 rounded-full",
+            mouthStyle: { borderBottom: "3px solid #334155", transform: "rotate(180deg)" },
+          };
+        }
+        if (mood === "dazed") {
+          return {
+            eyeClass: "top-10 h-2 w-3 rounded-full",
+            blushClass: "opacity-40",
+            mouthClass: "w-4 rounded-sm",
+            mouthStyle: { backgroundColor: "#334155" },
+          };
+        }
+        if (mood === "distressed") {
+          return {
+            eyeClass: "top-[2.35rem] h-3 w-3 rounded-full",
+            blushClass: "opacity-40",
+            mouthClass: "h-2.5 w-3.5 rounded-full",
+            mouthStyle: { backgroundColor: "#334155" },
+          };
+        }
+        if (mood === "sick") {
+          return {
+            eyeClass: "top-10 h-2.5 w-2.5 rounded-full",
+            blushClass: "opacity-90",
+            mouthClass: "w-5 rounded-full",
+            mouthStyle: { borderBottom: "3px solid #334155", transform: "rotate(180deg)" },
+          };
+        }
+        if (mood === "flushed") {
+          return {
+            eyeClass: "top-10 h-2.5 w-2.5 rounded-full",
+            blushClass: "opacity-90",
+            mouthClass: "w-6 rounded-full",
+            mouthStyle: { backgroundColor: "#334155" },
+          };
+        }
+        return {
+          eyeClass: "top-10 h-2.5 w-2.5 rounded-full",
+          blushClass: "opacity-40",
+          mouthClass: "w-6 rounded-full",
+          mouthStyle: { backgroundColor: "#334155" },
+        };
       }
 
       function Hair({ avatar }) {
@@ -1229,38 +1280,10 @@
       }
 
       function MiiPatient({ patient, compact = false }) {
+        if (!patient || !patient.avatar) return null;
         const avatar = patient.avatar;
         const mood = getPatientMood(patient);
-        const eyeClass =
-          mood === "anxious"
-            ? "top-10 h-2.5 w-3 rounded-full"
-            : mood === "dazed"
-              ? "top-10 h-2 w-3 rounded-full"
-              : mood === "distressed"
-                ? "top-[2.35rem] h-3 w-3 rounded-full"
-                : "top-10 h-2.5 w-2.5 rounded-full";
-        const blushClass =
-          mood === "flushed" || mood === "sick" ? "opacity-90" : mood === "anxious" ? "opacity-70" : "opacity-40";
-        const mouthClass =
-          mood === "anxious"
-            ? "w-5 rounded-full"
-            : mood === "distressed"
-              ? "h-2.5 w-3.5 rounded-full"
-              : mood === "dazed"
-                ? "w-4 rounded-sm"
-                : mood === "sick"
-                  ? "w-5 rounded-full"
-                  : "w-6 rounded-full";
-        const mouthStyle =
-          mood === "anxious"
-            ? { borderBottom: "3px solid #334155", transform: "rotate(180deg)" }
-            : mood === "distressed"
-              ? { backgroundColor: "#334155" }
-              : mood === "dazed"
-                ? { backgroundColor: "#334155" }
-                : mood === "sick"
-                  ? { borderBottom: "3px solid #334155", transform: "rotate(180deg)" }
-                  : { backgroundColor: "#334155" };
+        const { eyeClass, blushClass, mouthClass, mouthStyle } = getFaceDetails(mood);
         return (
           <div className={"relative " + (compact ? "scale-[0.72] sm:scale-90" : avatar.bodyScale)}>
             <div className={"relative mx-auto h-24 w-20 " + avatar.faceScale}>
@@ -1290,6 +1313,7 @@
       }
 
       function CartoonPatient({ patient }) {
+        if (!patient) return null;
         return (
           <div className="relative flex h-72 items-end justify-center overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-b from-white to-sky-50 px-6 pb-16 pt-6 shadow-inner sm:h-80 sm:pb-18">
             <div className="absolute inset-x-6 bottom-10 h-6 rounded-full bg-slate-900/5 blur-md" />
@@ -1387,7 +1411,7 @@
         const [usedChoices, setUsedChoices] = useState([]);
         const nextTimeoutRef = useRef(null);
 
-        const patient = currentShift[patientIndex];
+        const patient = currentShift[patientIndex] || currentShift[0] || CASES[0];
 
         const progressLabel = useMemo(
           () => `${Math.min(patientIndex + 1, currentShift.length)}/${currentShift.length || GAME_PATIENT_COUNT}`,
