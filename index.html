@@ -1567,6 +1567,49 @@
           return "You are a menace. Multiple families are grieving. Please return to the waiting room.";
         };
 
+        const getFinalBadge = () => {
+          if (livesSaved === 10 && moneyWasted < 120000) {
+            return {
+              label: "Budget Angel",
+              text: "Congrats, you are officially a Budget Angel.",
+            };
+          }
+          if (livesSaved === 10) {
+            return {
+              label: "ICU Influencer",
+              text: "Congrats, you are officially an ICU Influencer.",
+            };
+          }
+          if (livesSaved >= 8 && moneyWasted < 150000) {
+            return {
+              label: "Suspiciously Competent",
+              text: "Congrats, you are officially Suspiciously Competent.",
+            };
+          }
+          if (livesSaved >= 8) {
+            return {
+              label: "Panic Specialist",
+              text: "Congrats, you are officially a Panic Specialist.",
+            };
+          }
+          if (livesSaved >= 5 && moneyWasted > 200000) {
+            return {
+              label: "Overtriage Goblin",
+              text: "Congrats, you are officially an Overtriage Goblin.",
+            };
+          }
+          if (livesSaved >= 5) {
+            return {
+              label: "Malpractice Adjacent",
+              text: "Congrats, you are officially Malpractice Adjacent.",
+            };
+          }
+          return {
+            label: "Waiting Room Menace",
+            text: "Congrats, you are officially a Waiting Room Menace.",
+          };
+        };
+
         if (quit) {
           return (
             <div className="min-h-screen px-4 py-8 text-slate-900">
@@ -1588,6 +1631,7 @@
         }
 
         if (gameOver) {
+          const finalBadge = getFinalBadge();
           return (
             <div className="min-h-screen px-4 py-8 text-slate-900">
               <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft backdrop-blur sm:p-8">
@@ -1595,6 +1639,10 @@
                   <div>
                     <p className="text-sm font-bold uppercase tracking-[0.28em] text-rose-600">Triage Complete</p>
                     <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Your Shift Report Card</h1>
+                    <div className="mt-4 inline-flex rounded-full bg-sky-100 px-4 py-2 text-xs font-bold uppercase tracking-[0.2em] text-sky-700">
+                      {finalBadge.label}
+                    </div>
+                    <p className="mt-3 text-lg font-bold text-slate-800">{finalBadge.text}</p>
                     <p className="mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">{getFinalMessage()}</p>
                   </div>
                   <div className="rounded-[1.5rem] bg-slate-900 px-5 py-4 text-white shadow-lg">
