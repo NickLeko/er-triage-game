@@ -216,7 +216,7 @@ const CASES = [
 
 const MALPRACTICE_COST = 275000;
 const TIMER_SECONDS = 15;
-const FEEDBACK_MS = 2400;
+const FEEDBACK_MS = 5400;
 
 const currency = (value) =>
   new Intl.NumberFormat("en-US", {
