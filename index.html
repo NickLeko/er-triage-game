@@ -1436,6 +1436,11 @@
           return () => window.clearTimeout(timer);
         }, [timeLeft, feedback, gameOver, quit, patient, phase]);
 
+        useEffect(() => {
+          if (phase !== "playing" || feedback || gameOver || quit) return;
+          window.scrollTo({ top: 0, behavior: "smooth" });
+        }, [patientIndex, phase, feedback, gameOver, quit]);
+
         const restartGame = () => {
           if (nextTimeoutRef.current) {
             window.clearTimeout(nextTimeoutRef.current);
