@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>ER Triage Game</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            fontFamily: {
+              sans: ["Trebuchet MS", "Avenir Next", "Segoe UI", "sans-serif"],
+            },
+            boxShadow: {
+              soft: "0 18px 45px rgba(15, 23, 42, 0.12)",
+            },
+          },
+        },
+      };
+    </script>
+    <script crossorigin src="https://unpkg.com/react@18/umd/react.development.js"></script>
+    <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.development.js"></script>
+    <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+    <style>
+      body {
+        margin: 0;
+        min-height: 100vh;
+        background:
+          radial-gradient(circle at top, rgba(191, 219, 254, 0.9), rgba(248, 250, 252, 0.95) 38%, rgba(254, 226, 226, 0.92)),
+          #f8fafc;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <script type="text/babel">
+      const { useEffect, useMemo, useRef, useState } = React;
+
+      const TRIAGE_OPTIONS = [
+        "Send Home with Meds",
+        "Urgent Care",
+        "Emergency Room",
+        "ICU",
+      ];
+
+      const TRIAGE_RANK = {
+        "Send Home with Meds": 0,
+        "Urgent Care": 1,
+        "Emergency Room": 2,
+        ICU: 3,
+      };
+
+      const TRIAGE_COST = {
+        "Send Home with Meds": 150,
+        "Urgent Care": 800,
+        "Emergency Room": 9000,
+        ICU: 90000,
+      };
+
+      const CORRECT_ROASTS = [
+        "Correct. Don't let it go to your head.",
+        "Right answer, wrong energy, but we'll take it.",
+        "Congrats, you're basically the next Dr. Oz.",
+        "You were correct. Please act less proud.",
+        "Nice job. The bar was underground and you still cleared it.",
+      ];
+
+      const CASES = [
+        {
+          name: "Mike",
+          age: "45M",
+          intro: '"Ate a big burrito 2 hours ago, probably heartburn."',
+          complaint: "Crushing chest pain",
+          symptoms: ["Sweating", "Left arm tingling", "Looks very not-burrito-related"],
+          labs: ["EKG shows ST elevation"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds", "Urgent Care"],
+          deathText:
+            "Mike is dead. That wasn't heartburn. That was his heart saying goodbye.",
+          optionRoasts: {
+            ICU: "Technically correct but you burned $80k on a guy who needed a cath lab, not a ventilator.",
+          },
+          avatar: {
+            skin: "#f1c7a5",
+            shirt: "#d97706",
+            pants: "#475569",
+            hair: "#422006",
+            hairStyle: "buzz",
+            hairHeight: "h-4",
+            bodyScale: "scale-105",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Brittany",
+          age: "19F",
+          intro: '"Has a stats exam tomorrow, drinks 6 Red Bulls daily."',
+          complaint: "Heart racing",
+          symptoms: ["Can't breathe", "Tingling fingers", "Crying"],
+          labs: ["HR 112", "O2 99%", "EKG normal"],
+          acceptable: ["Send Home with Meds"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Urgent Care": "Reasonable-ish, but you sent caffeine panic to a strip mall annex. Bold.",
+            "Emergency Room": "You activated expensive feelings management. The accountants are sobbing now too.",
+            ICU: "Congrats you admitted a panic attack to the ICU. Brittany failed her exam AND you failed this one.",
+          },
+          avatar: {
+            skin: "#f6d2bc",
+            shirt: "#fb7185",
+            pants: "#6366f1",
+            hair: "#7c2d12",
+            hairStyle: "long",
+            hairHeight: "h-12",
+            bodyScale: "scale-95",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Dave",
+          age: "35M",
+          intro: '"My wife made me come in."',
+          complaint: "Minor hand laceration from cooking",
+          symptoms: ["Band-aid already on it", "Vitals perfect", "Looks embarrassed"],
+          labs: [],
+          acceptable: ["Urgent Care"],
+          ideal: "Urgent Care",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "Honestly he was halfway home already. You barely participated.",
+            "Emergency Room": "You used a trauma bay for a paper cut. Dave's wife is still annoyed. Nothing changed.",
+            ICU: "You used a trauma bay for a paper cut. Dave's wife is still annoyed. Nothing changed.",
+          },
+          avatar: {
+            skin: "#e7bf9d",
+            shirt: "#94a3b8",
+            pants: "#334155",
+            hair: "#3f3f46",
+            hairStyle: "part",
+            hairHeight: "h-5",
+            bodyScale: "scale-100",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Linda",
+          age: "52F",
+          intro: '"I get migraines all the time, this one feels different."',
+          complaint: "Sudden onset worst headache of her life",
+          symptoms: ["Stiff neck", "Photophobia"],
+          labs: ["BP 170/100"],
+          acceptable: ["ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds"],
+          deathText:
+            "Linda has a subarachnoid hemorrhage. She did not make it home. You killed a woman for saying she gets migraines.",
+          optionRoasts: {
+            "Urgent Care": "You sent a thunderclap headache to urgent care. That's not triage, that's outsourcing guilt.",
+            "Emergency Room": "Close, but she needs the unit upstairs where alarms go to scream.",
+          },
+          avatar: {
+            skin: "#f0c9ae",
+            shirt: "#f472b6",
+            pants: "#7c3aed",
+            hair: "#6b7280",
+            hairStyle: "bob",
+            hairHeight: "h-7",
+            bodyScale: "scale-100",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Frank",
+          age: "67M",
+          intro: '"He comes in every week, always fine, smells like a brewery."',
+          complaint: "Chest pain",
+          symptoms: ["Slurred speech", "Regular visitor"],
+          labs: ["NEW EKG changes", "Troponin elevated"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText:
+            "Frank was crying wolf for 6 months. Today the wolf was real. Frank is dead. You learned nothing from Aesop.",
+          optionRoasts: {
+            "Urgent Care": "You saw positive troponins and chose retail medicine. Deeply unsettling.",
+            ICU: "Not wildly wrong, just wildly expensive.",
+          },
+          avatar: {
+            skin: "#d9b38c",
+            shirt: "#f59e0b",
+            pants: "#52525b",
+            hair: "#d6d3d1",
+            hairStyle: "ring",
+            hairHeight: "h-5",
+            bodyScale: "scale-110",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Emma",
+          age: "3F",
+          intro: `"She won't stop crying, mom is panicking."`,
+          complaint: "Fever 103",
+          symptoms: ["Pulling at ear", "Fussy", "Eating fine"],
+          labs: ["WBC mildly elevated"],
+          acceptable: ["Send Home with Meds", "Urgent Care"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Send Home with Meds": "Correct. Tiny ear, tiny crisis.",
+            "Urgent Care": "Acceptable. Everyone survives, including your conscience.",
+            "Emergency Room": "You lit up the ER for an ear infection. The nurses are making a group chat about you.",
+            ICU: "You admitted a toddler with an ear infection to the ICU. Emma is fine. Her mom is traumatized. You owe someone a therapy copay.",
+          },
+          avatar: {
+            skin: "#f4d7c0",
+            shirt: "#f9a8d4",
+            pants: "#60a5fa",
+            hair: "#92400e",
+            hairStyle: "puffs",
+            hairHeight: "h-5",
+            bodyScale: "scale-75",
+            faceScale: "scale-90",
+          },
+        },
+        {
+          name: "Chad",
+          age: "28M",
+          intro: '"Just crushed leg day, probably sore."',
+          complaint: "Dark brown urine",
+          symptoms: ["Severe muscle pain", "Hadn't drunk water in 2 days"],
+          labs: ["Creatinine 4.2", "CK through the roof"],
+          acceptable: ["Emergency Room", "ICU"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText:
+            "Chad's kidneys have left the chat. Rhabdo is not a vibe, it's a medical emergency.",
+          optionRoasts: {
+            "Urgent Care": "You sent imminent kidney betrayal to urgent care. Fascinating choice.",
+            "Emergency Room": "Correct. His urine is cola, not a personality.",
+            ICU: "Also acceptable. You're dramatic, but at least Chad keeps both kidneys on paper.",
+          },
+          avatar: {
+            skin: "#ddb18e",
+            shirt: "#38bdf8",
+            pants: "#1e3a8a",
+            hair: "#111827",
+            hairStyle: "flat",
+            hairHeight: "h-5",
+            bodyScale: "scale-110",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Dorothy",
+          age: "78F",
+          intro: `"She's always a little confused, totally normal for her."`,
+          complaint: "Family brought her in",
+          symptoms: ["Mild confusion", "Warm skin"],
+          labs: ["BP 82/50", "HR 124", "WBC 18k", "Lactate elevated"],
+          acceptable: ["ICU"],
+          ideal: "ICU",
+          deathChoices: ["Send Home with Meds"],
+          deathText:
+            "Dorothy had sepsis. Dorothy did not go home. You sent a septic 78 year old home because her family said she was always weird. Incredible.",
+          optionRoasts: {
+            "Urgent Care": "You sent septic shock to urgent care. The clipboard there isn't fixing this.",
+            "Emergency Room": "Better, but she needs tubes, pressors, and a lot more panic.",
+          },
+          avatar: {
+            skin: "#ecc4a7",
+            shirt: "#c4b5fd",
+            pants: "#6b7280",
+            hair: "#f5f5f4",
+            hairStyle: "bun",
+            hairHeight: "h-7",
+            bodyScale: "scale-90",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Gerald",
+          age: "42M",
+          intro: '"WebMD told me I have 14 conditions."',
+          complaint: "Chest tightness",
+          symptoms: [
+            "Self-diagnosed with everything",
+            "Brought printed articles",
+            "Vitals perfect",
+            "Been here 4 times this month",
+          ],
+          labs: ["Normal labs"],
+          acceptable: ["Send Home with Meds"],
+          ideal: "Send Home with Meds",
+          deathChoices: [],
+          optionRoasts: {
+            "Urgent Care": "You referred browser anxiety to a smaller building. Inspirational.",
+            "Emergency Room": "You rewarded WebMD with hospital resources. The internet wins again.",
+            ICU: "Gerald does not have 14 conditions. Gerald has anxiety and a wifi connection. You just gave him validation and a $90k bill.",
+          },
+          avatar: {
+            skin: "#f0c6a4",
+            shirt: "#34d399",
+            pants: "#374151",
+            hair: "#374151",
+            hairStyle: "spike",
+            hairHeight: "h-6",
+            bodyScale: "scale-100",
+            faceScale: "scale-100",
+          },
+        },
+        {
+          name: "Ashley",
+          age: "22F",
+          intro: '"Probably just period cramps."',
+          complaint: "Right lower quadrant pain",
+          symptoms: ["Nausea", "Fever 101", "Pain worse with movement"],
+          labs: ["WBC 14k", "Rebound tenderness noted"],
+          acceptable: ["Emergency Room"],
+          ideal: "Emergency Room",
+          deathChoices: ["Send Home with Meds"],
+          deathText:
+            "Ashley's appendix ruptured in the parking lot. She said it was probably cramps. It was not cramps.",
+          optionRoasts: {
+            "Urgent Care": "You sent probable appendicitis to urgent care. Hope they enjoy surprise surgery referrals.",
+            ICU: "Overkill, but at least the appendix loses this round.",
+          },
+          avatar: {
+            skin: "#f3d0b8",
+            shirt: "#f87171",
+            pants: "#7c2d12",
+            hair: "#1f2937",
+            hairStyle: "ponytail",
+            hairHeight: "h-9",
+            bodyScale: "scale-95",
+            faceScale: "scale-100",
+          },
+        },
+      ];
+
+      const TIMER_SECONDS = 10;
+      const FEEDBACK_MS = 2400;
+
+      const currency = (value) =>
+        new Intl.NumberFormat("en-US", {
+          style: "currency",
+          currency: "USD",
+          maximumFractionDigits: 0,
+        }).format(value);
+
+      const pickRandom = (items) => items[Math.floor(Math.random() * items.length)];
+
+      function Hair({ avatar }) {
+        const baseStyle = { backgroundColor: avatar.hair };
+
+        if (avatar.hairStyle === "buzz") {
+          return <div className="absolute left-3 top-1 h-4 w-14 rounded-t-full rounded-b-md" style={baseStyle} />;
+        }
+        if (avatar.hairStyle === "long") {
+          return (
+            <>
+              <div className="absolute left-2 top-1 h-8 w-16 rounded-t-full" style={baseStyle} />
+              <div className="absolute left-1 top-5 h-8 w-4 rounded-b-full" style={baseStyle} />
+              <div className="absolute right-1 top-5 h-8 w-4 rounded-b-full" style={baseStyle} />
+            </>
+          );
+        }
+        if (avatar.hairStyle === "bob") {
+          return (
+            <>
+              <div className="absolute left-2 top-1 h-7 w-16 rounded-t-full" style={baseStyle} />
+              <div className="absolute left-1 top-5 h-4 w-5 rounded-full" style={baseStyle} />
+              <div className="absolute right-1 top-5 h-4 w-5 rounded-full" style={baseStyle} />
+            </>
+          );
+        }
+        if (avatar.hairStyle === "ring") {
+          return (
+            <>
+              <div className="absolute left-3 top-1 h-4 w-14 rounded-t-full" style={baseStyle} />
+              <div className="absolute left-1 top-4 h-3 w-4 rounded-full" style={baseStyle} />
+              <div className="absolute right-1 top-4 h-3 w-4 rounded-full" style={baseStyle} />
+            </>
+          );
+        }
+        if (avatar.hairStyle === "puffs") {
+          return (
+            <>
+              <div className="absolute left-0 top-3 h-4 w-4 rounded-full" style={baseStyle} />
+              <div className="absolute right-0 top-3 h-4 w-4 rounded-full" style={baseStyle} />
+              <div className="absolute left-3 top-2 h-4 w-14 rounded-t-full" style={baseStyle} />
+            </>
+          );
+        }
+        if (avatar.hairStyle === "flat") {
+          return <div className="absolute left-2 top-1 h-5 w-16 rounded-t-[1.2rem] rounded-b-sm" style={baseStyle} />;
+        }
+        if (avatar.hairStyle === "bun") {
+          return (
+            <>
+              <div className="absolute left-5 -top-1 h-4 w-6 rounded-full" style={baseStyle} />
+              <div className="absolute left-2 top-2 h-5 w-16 rounded-t-full" style={baseStyle} />
+            </>
+          );
+        }
+        if (avatar.hairStyle === "spike") {
+          return (
+            <div className="absolute left-2 top-0 h-6 w-16" style={{ clipPath: "polygon(0% 100%, 10% 35%, 22% 100%, 36% 20%, 50% 100%, 65% 25%, 80% 100%, 92% 40%, 100% 100%)", ...baseStyle }} />
+          );
+        }
+        if (avatar.hairStyle === "ponytail") {
+          return (
+            <>
+              <div className="absolute left-3 top-1 h-6 w-14 rounded-t-full" style={baseStyle} />
+              <div className="absolute right-[-0.35rem] top-5 h-6 w-3 rounded-full" style={baseStyle} />
+            </>
+          );
+        }
+        if (avatar.hairStyle === "part") {
+          return (
+            <>
+              <div className="absolute left-2 top-1 h-5 w-6 rounded-t-full" style={baseStyle} />
+              <div className="absolute left-8 top-1 h-5 w-8 rounded-t-full" style={baseStyle} />
+            </>
+          );
+        }
+        return null;
+      }
+
+      function MiiPatient({ patient, compact = false }) {
+        const avatar = patient.avatar;
+        return (
+          <div className={"relative " + (compact ? "scale-[0.72] sm:scale-90" : avatar.bodyScale)}>
+            <div className={"relative mx-auto h-24 w-20 " + avatar.faceScale}>
+              <div
+                className="absolute left-1 top-3 h-20 w-[4.5rem] rounded-[2.2rem] border-4 border-slate-700 bg-amber-100"
+                style={{ backgroundColor: avatar.skin }}
+              />
+              <Hair avatar={avatar} />
+              <div className="absolute left-5 top-10 h-2.5 w-2.5 rounded-full bg-slate-700" />
+              <div className="absolute right-5 top-10 h-2.5 w-2.5 rounded-full bg-slate-700" />
+              <div className="absolute left-[1.65rem] top-[3.55rem] h-1.5 w-8 rounded-full bg-rose-300 opacity-70" />
+              <div className="absolute left-[2.05rem] top-[3.05rem] h-4 w-2 rounded-full border-r-2 border-slate-600" />
+              <div className="absolute left-[1.95rem] top-[4.35rem] h-1.5 w-6 rounded-full bg-slate-700" />
+            </div>
+            <div
+              className="mx-auto mt-1 h-24 w-24 rounded-[2rem] border-4 border-slate-700"
+              style={{ backgroundColor: avatar.shirt }}
+            />
+            <div className="absolute left-[-0.9rem] top-[6.25rem] h-4 w-10 rounded-full border-4 border-slate-700 bg-white" />
+            <div className="absolute right-[-0.9rem] top-[6.25rem] h-4 w-10 rounded-full border-4 border-slate-700 bg-white" />
+            <div className="absolute left-7 top-[11.25rem] h-16 w-4 rounded-full border-4 border-slate-700" style={{ backgroundColor: avatar.pants }} />
+            <div className="absolute right-7 top-[11.25rem] h-16 w-4 rounded-full border-4 border-slate-700" style={{ backgroundColor: avatar.pants }} />
+          </div>
+        );
+      }
+
+      function CartoonPatient({ patient }) {
+        return (
+          <div className="relative flex h-72 items-end justify-center overflow-hidden rounded-[2rem] border border-slate-200 bg-gradient-to-b from-white to-sky-50 px-6 pb-16 pt-6 shadow-inner sm:h-80 sm:pb-18">
+            <div className="absolute inset-x-6 bottom-10 h-6 rounded-full bg-slate-900/5 blur-md" />
+            <div className="absolute left-4 top-4 rounded-full bg-rose-100 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-rose-700 sm:left-5 sm:top-5 sm:text-[11px]">
+              Waiting Room Chaos
+            </div>
+            <div className="absolute right-4 top-4 rounded-full bg-white/80 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] text-slate-500 shadow-sm">
+              Definitely a Human
+            </div>
+            <MiiPatient patient={patient} />
+            <div className="absolute bottom-3 rounded-full bg-white/85 px-4 py-2 text-center text-[11px] font-semibold text-slate-500 shadow-sm sm:text-xs">
+              Cartoon likeness only. Lawsuit-proof, unlike your decisions.
+            </div>
+          </div>
+        );
+      }
+
+      function TutorialPanel() {
+        const samplePatient = CASES[0];
+        return (
+          <div className="grid gap-6 lg:grid-cols-[0.95fr_1.05fr]">
+            <div className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-soft backdrop-blur sm:p-6">
+              <div className="mb-4 flex flex-wrap items-center justify-between gap-3 rounded-[1.5rem] bg-slate-900 px-4 py-3 text-white">
+                <div>
+                  <div className="text-[11px] font-bold uppercase tracking-[0.22em] text-slate-300">Top Bar</div>
+                  <div className="text-sm text-slate-100">Lives, money, and countdown live here.</div>
+                </div>
+                <div className="text-right">
+                  <div className="text-xl font-black text-emerald-300">7/10</div>
+                  <div className="text-[11px] uppercase tracking-[0.18em] text-slate-300">Lives Saved</div>
+                </div>
+              </div>
+
+              <div className="rounded-[1.8rem] border border-slate-200 bg-gradient-to-b from-white to-sky-50 p-5">
+                <div className="flex items-center justify-between gap-3">
+                  <div>
+                    <div className="text-[11px] font-bold uppercase tracking-[0.24em] text-slate-500">Patient Card</div>
+                    <div className="mt-2 text-2xl font-black text-slate-900">{samplePatient.name}, {samplePatient.age}</div>
+                    <div className="mt-2 text-sm text-slate-600">{samplePatient.intro}</div>
+                  </div>
+                  <div className="rounded-full bg-sky-100 px-3 py-2 text-xs font-bold text-sky-700">
+                    {samplePatient.complaint}
+                  </div>
+                </div>
+                <div className="mt-4 flex items-center justify-center rounded-[1.5rem] border border-slate-200 bg-white px-4 py-6">
+                  <MiiPatient patient={samplePatient} compact />
+                </div>
+              </div>
+            </div>
+
+            <div className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-soft backdrop-blur sm:p-6">
+              <div className="grid gap-4">
+                <div className="rounded-[1.5rem] bg-emerald-50 p-4">
+                  <div className="text-sm font-bold uppercase tracking-[0.22em] text-emerald-700">1. Read Fast</div>
+                  <p className="mt-2 text-sm text-slate-700">
+                    Chief complaint, symptoms, and labs are your clues. Some patients are annoying. Some are dying. Many are both.
+                  </p>
+                </div>
+                <div className="rounded-[1.5rem] bg-sky-50 p-4">
+                  <div className="text-sm font-bold uppercase tracking-[0.22em] text-sky-700">2. Pick One</div>
+                  <p className="mt-2 text-sm text-slate-700">
+                    The four buttons are the only thing that matters: send home, urgent care, ER, or ICU. Overtriage burns money. Undertriage may turn into a funeral.
+                  </p>
+                </div>
+                <div className="rounded-[1.5rem] bg-rose-50 p-4">
+                  <div className="text-sm font-bold uppercase tracking-[0.22em] text-rose-700">3. Eat the Roast</div>
+                  <p className="mt-2 text-sm text-slate-700">
+                    Every answer gets mocked. Correct answers save lives. Bad answers cost dignity, sleep, and occasionally a family lawsuit.
+                  </p>
+                </div>
+              </div>
+
+              <div className="mt-5 grid gap-3 sm:grid-cols-2">
+                {TRIAGE_OPTIONS.map((option) => (
+                  <div key={option} className="rounded-[1.15rem] border border-slate-200 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm">
+                    {option}
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      function App() {
+        const [phase, setPhase] = useState("home");
+        const [patientIndex, setPatientIndex] = useState(0);
+        const [timeLeft, setTimeLeft] = useState(TIMER_SECONDS);
+        const [livesSaved, setLivesSaved] = useState(0);
+        const [moneyWasted, setMoneyWasted] = useState(0);
+        const [feedback, setFeedback] = useState(null);
+        const [gameOver, setGameOver] = useState(false);
+        const [quit, setQuit] = useState(false);
+        const [usedChoices, setUsedChoices] = useState([]);
+        const nextTimeoutRef = useRef(null);
+
+        const patient = CASES[patientIndex];
+
+        const progressLabel = useMemo(
+          () => `${Math.min(patientIndex + 1, CASES.length)}/${CASES.length}`,
+          [patientIndex]
+        );
+
+        useEffect(() => {
+          return () => {
+            if (nextTimeoutRef.current) {
+              window.clearTimeout(nextTimeoutRef.current);
+            }
+          };
+        }, []);
+
+        useEffect(() => {
+          if (phase !== "playing" || gameOver || quit || feedback) return undefined;
+
+          if (timeLeft <= 0) {
+            const wrongChoices = TRIAGE_OPTIONS.filter(
+              (option) => !patient.acceptable.includes(option)
+            );
+            const randomWrong = pickRandom(wrongChoices);
+            resolveChoice(randomWrong, true);
+            return undefined;
+          }
+
+          const timer = window.setTimeout(() => {
+            setTimeLeft((value) => value - 1);
+          }, 1000);
+
+          return () => window.clearTimeout(timer);
+        }, [timeLeft, feedback, gameOver, quit, patient, phase]);
+
+        const restartGame = () => {
+          if (nextTimeoutRef.current) {
+            window.clearTimeout(nextTimeoutRef.current);
+            nextTimeoutRef.current = null;
+          }
+          setPhase("home");
+          setPatientIndex(0);
+          setTimeLeft(TIMER_SECONDS);
+          setLivesSaved(0);
+          setMoneyWasted(0);
+          setFeedback(null);
+          setGameOver(false);
+          setQuit(false);
+          setUsedChoices([]);
+        };
+
+        const startGame = () => {
+          setPhase("playing");
+          setPatientIndex(0);
+          setTimeLeft(TIMER_SECONDS);
+          setLivesSaved(0);
+          setMoneyWasted(0);
+          setFeedback(null);
+          setGameOver(false);
+          setQuit(false);
+          setUsedChoices([]);
+        };
+
+        const finishGame = () => {
+          setGameOver(true);
+          setFeedback(null);
+        };
+
+        const goNext = () => {
+          if (patientIndex >= CASES.length - 1) {
+            finishGame();
+            return;
+          }
+          setPatientIndex((value) => value + 1);
+          setTimeLeft(TIMER_SECONDS);
+          setFeedback(null);
+        };
+
+        const resolveChoice = (choice, timedOut = false) => {
+          if (feedback || gameOver || quit || phase !== "playing") return;
+
+          const isAcceptable = patient.acceptable.includes(choice);
+          const idealRank = TRIAGE_RANK[patient.ideal];
+          const choiceRank = TRIAGE_RANK[choice];
+          const overtriage = choiceRank > idealRank;
+          const undertriage = choiceRank < idealRank;
+          const fatalUndertriage = patient.deathChoices.includes(choice);
+
+          let moneyDelta = 0;
+          let savedDelta = 0;
+          let roast = "";
+
+          if (isAcceptable) {
+            savedDelta = 1;
+            roast = patient.optionRoasts[choice] || pickRandom(CORRECT_ROASTS);
+            if (overtriage) {
+              moneyDelta = TRIAGE_COST[choice] - TRIAGE_COST[patient.ideal];
+            }
+          } else if (fatalUndertriage) {
+            roast = patient.deathText;
+          } else {
+            roast =
+              patient.optionRoasts[choice] ||
+              (undertriage
+                ? "Wrong and dangerously optimistic. A terrible combo."
+                : "Wrong, expensive, and somehow still confident.");
+            if (overtriage) {
+              moneyDelta = TRIAGE_COST[choice] - TRIAGE_COST[patient.ideal];
+            }
+          }
+
+          if (timedOut) {
+            roast = `You froze, the clock picked "${choice}" for you, and somehow that made things worse. ${roast}`;
+          }
+
+          setLivesSaved((value) => value + savedDelta);
+          setMoneyWasted((value) => value + moneyDelta);
+          setUsedChoices((value) => [
+            ...value,
+            { patient: patient.name, choice, savedDelta, moneyDelta },
+          ]);
+          setFeedback({
+            title: isAcceptable ? "Patient Mostly Survived" : "Administrative Disaster",
+            choice,
+            roast,
+            savedDelta,
+            moneyDelta,
+          });
+
+          nextTimeoutRef.current = window.setTimeout(goNext, FEEDBACK_MS);
+        };
+
+        const getFinalMessage = () => {
+          if (livesSaved === 10 && moneyWasted >= 200000) {
+            return "You saved everyone but bankrupted the hospital. The ICU is now a Panera Bread.";
+          }
+          if (livesSaved === 10 && moneyWasted < 200000) {
+            return "You're annoyingly good at this. Please never actually practice medicine, you'd make the rest of us look bad.";
+          }
+          if (livesSaved >= 8) {
+            return "Not bad. A couple people died but statistically that happens anyway.";
+          }
+          if (livesSaved >= 5) {
+            return "Half your patients survived. Glass half full. The other glass is a malpractice suit.";
+          }
+          return "You are a menace. Multiple families are grieving. Please return to the waiting room.";
+        };
+
+        if (quit) {
+          return (
+            <div className="min-h-screen px-4 py-8 text-slate-900">
+              <div className="mx-auto max-w-3xl rounded-[2rem] border border-slate-200 bg-white p-8 shadow-soft sm:p-10">
+                <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-700">Shift Ended</p>
+                <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">You left the ER.</h1>
+                <p className="mt-4 text-base text-slate-600 sm:text-lg">
+                  Honestly, probably your best clinical decision all day.
+                </p>
+                <button
+                  onClick={restartGame}
+                  className="mt-8 rounded-full bg-slate-900 px-6 py-3 text-sm font-bold text-white transition hover:bg-slate-700"
+                >
+                  Start Over
+                </button>
+              </div>
+            </div>
+          );
+        }
+
+        if (gameOver) {
+          return (
+            <div className="min-h-screen px-4 py-8 text-slate-900">
+              <div className="mx-auto max-w-4xl rounded-[2rem] border border-white/80 bg-white/90 p-6 shadow-soft backdrop-blur sm:p-8">
+                <div className="flex flex-wrap items-start justify-between gap-4">
+                  <div>
+                    <p className="text-sm font-bold uppercase tracking-[0.28em] text-rose-600">Triage Complete</p>
+                    <h1 className="mt-3 text-3xl font-black tracking-tight sm:text-4xl">Your Shift Report Card</h1>
+                    <p className="mt-3 max-w-2xl text-base text-slate-600 sm:text-lg">{getFinalMessage()}</p>
+                  </div>
+                  <div className="rounded-[1.5rem] bg-slate-900 px-5 py-4 text-white shadow-lg">
+                    <div className="text-xs font-semibold uppercase tracking-[0.24em] text-slate-300">Final Damage</div>
+                    <div className="mt-2 text-3xl font-black">{livesSaved}/10</div>
+                    <div className="text-sm text-slate-300">Lives Saved</div>
+                    <div className="mt-3 text-2xl font-black text-rose-300">{currency(moneyWasted)}</div>
+                    <div className="text-sm text-slate-300">Money Wasted</div>
+                  </div>
+                </div>
+
+                <div className="mt-8 grid gap-4 md:grid-cols-2">
+                  <button
+                    onClick={restartGame}
+                    className="rounded-2xl bg-sky-600 px-5 py-4 text-lg font-bold text-white transition hover:bg-sky-500"
+                  >
+                    Play Again
+                  </button>
+                  <button
+                    onClick={() => setQuit(true)}
+                    className="rounded-2xl border border-slate-300 bg-white px-5 py-4 text-lg font-bold text-slate-700 transition hover:bg-slate-50"
+                  >
+                    Quit
+                  </button>
+                </div>
+
+                <div className="mt-8 rounded-[1.5rem] border border-slate-200 bg-slate-50 p-5">
+                  <p className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">Decision Trail</p>
+                  <div className="mt-4 grid gap-2">
+                    {usedChoices.map((entry, index) => (
+                      <div
+                        key={entry.patient + "-" + entry.choice + "-" + index}
+                        className="flex items-center justify-between gap-3 rounded-xl bg-white px-4 py-3 text-sm shadow-sm"
+                      >
+                        <span className="font-semibold text-slate-700">
+                          {entry.patient}: {entry.choice}
+                        </span>
+                        <span className={entry.savedDelta ? "font-bold text-emerald-600" : "font-bold text-rose-600"}>
+                          {entry.savedDelta ? "+1 life" : "0 lives"}
+                        </span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        if (phase === "home") {
+          return (
+            <div className="min-h-screen px-4 py-6 text-slate-900 sm:py-8">
+              <div className="mx-auto max-w-6xl">
+                <div className="rounded-[2.4rem] border border-white/80 bg-white/80 p-6 shadow-soft backdrop-blur sm:p-8">
+                  <div className="flex flex-col gap-5 lg:flex-row lg:items-end lg:justify-between">
+                    <div className="max-w-3xl">
+                      <p className="text-sm font-bold uppercase tracking-[0.3em] text-sky-700">ER Triage Game</p>
+                      <h1 className="mt-3 text-4xl font-black tracking-tight sm:text-5xl">
+                        Decide fast. Get roasted faster.
+                      </h1>
+                      <p className="mt-4 text-base leading-relaxed text-slate-600 sm:text-lg">
+                        You have 10 seconds per patient to choose between home, urgent care, the ER, or the ICU.
+                        Save lives, waste as little money as possible, and try not to accidentally convert the hospital into a Panera Bread.
+                      </p>
+                    </div>
+                    <div className="flex flex-col gap-3 sm:flex-row">
+                      <button
+                        onClick={startGame}
+                        className="rounded-2xl bg-sky-600 px-6 py-4 text-lg font-bold text-white transition hover:bg-sky-500"
+                      >
+                        Start Shift
+                      </button>
+                      <button
+                        onClick={() => setQuit(true)}
+                        className="rounded-2xl border border-slate-300 bg-white px-6 py-4 text-lg font-bold text-slate-700 transition hover:bg-slate-50"
+                      >
+                        Quit
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="mt-8 grid gap-4 md:grid-cols-3">
+                    <div className="rounded-[1.5rem] bg-emerald-50 p-4">
+                      <div className="text-sm font-bold uppercase tracking-[0.22em] text-emerald-700">Goal</div>
+                      <p className="mt-2 text-sm text-slate-700">Get as many patients through alive as possible. Acceptable triage still counts.</p>
+                    </div>
+                    <div className="rounded-[1.5rem] bg-rose-50 p-4">
+                      <div className="text-sm font-bold uppercase tracking-[0.22em] text-rose-700">Cost</div>
+                      <p className="mt-2 text-sm text-slate-700">Money wasted only tracks overtriage. If you send a disaster home, the patient pays for it. Emotionally, so do you.</p>
+                    </div>
+                    <div className="rounded-[1.5rem] bg-sky-50 p-4">
+                      <div className="text-sm font-bold uppercase tracking-[0.22em] text-sky-700">Pace</div>
+                      <p className="mt-2 text-sm text-slate-700">If time runs out, the game picks a random wrong answer and publicly shames your indecision.</p>
+                    </div>
+                  </div>
+
+                  <div className="mt-8">
+                    <div className="mb-4 flex items-center justify-between gap-3">
+                      <h2 className="text-2xl font-black tracking-tight sm:text-3xl">How the screen works</h2>
+                      <div className="rounded-full bg-slate-900 px-4 py-2 text-xs font-bold uppercase tracking-[0.22em] text-white">
+                        Read this once, save two patients
+                      </div>
+                    </div>
+                    <TutorialPanel />
+                  </div>
+                </div>
+              </div>
+            </div>
+          );
+        }
+
+        return (
+          <div className="min-h-screen px-4 py-5 text-slate-900 sm:py-6">
+            <div className="mx-auto max-w-6xl">
+              <div className="mb-6 flex flex-wrap items-center justify-between gap-4 rounded-[2rem] border border-white/70 bg-white/80 px-5 py-5 shadow-soft backdrop-blur sm:px-6">
+                <div>
+                  <p className="text-sm font-bold uppercase tracking-[0.28em] text-sky-700">ER Triage Game</p>
+                  <h1 className="mt-1 text-2xl font-black tracking-tight sm:text-3xl">Pick fast, regret faster.</h1>
+                </div>
+                <div className="grid w-full gap-3 sm:w-auto sm:grid-flow-col">
+                  <div className="rounded-2xl bg-emerald-50 px-4 py-3 shadow-sm">
+                    <div className="text-xs font-bold uppercase tracking-[0.2em] text-emerald-700">Lives Saved</div>
+                    <div className="text-2xl font-black text-emerald-800">{livesSaved}/10</div>
+                  </div>
+                  <div className="rounded-2xl bg-rose-50 px-4 py-3 shadow-sm">
+                    <div className="text-xs font-bold uppercase tracking-[0.2em] text-rose-700">Money Wasted</div>
+                    <div className="text-2xl font-black text-rose-800">{currency(moneyWasted)}</div>
+                  </div>
+                  <div className="rounded-2xl bg-slate-900 px-4 py-3 text-white shadow-sm">
+                    <div className="text-xs font-bold uppercase tracking-[0.2em] text-slate-300">Countdown</div>
+                    <div className={"text-2xl font-black " + (timeLeft <= 3 ? "text-rose-300" : "text-white")}>
+                      {timeLeft}s
+                    </div>
+                  </div>
+                  <button
+                    onClick={() => setQuit(true)}
+                    className="rounded-2xl border border-slate-300 bg-white px-4 py-3 text-sm font-bold text-slate-700 shadow-sm transition hover:bg-slate-50"
+                  >
+                    Quit Game
+                  </button>
+                </div>
+              </div>
+
+              <div className="grid gap-6 lg:grid-cols-[1.05fr_1.15fr]">
+                <CartoonPatient patient={patient} />
+
+                <div className="rounded-[2rem] border border-white/70 bg-white/90 p-5 shadow-soft backdrop-blur sm:p-6">
+                  <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+                    <div>
+                      <p className="text-sm font-bold uppercase tracking-[0.28em] text-slate-500">
+                        Patient {progressLabel}
+                      </p>
+                      <h2 className="mt-2 text-3xl font-black tracking-tight sm:text-4xl">
+                        {patient.name}, {patient.age}
+                      </h2>
+                      <p className="mt-3 text-base text-slate-600 sm:text-lg">{patient.intro}</p>
+                    </div>
+                    <div className="w-fit rounded-full bg-sky-100 px-4 py-2 text-sm font-bold text-sky-700">
+                      {patient.complaint}
+                    </div>
+                  </div>
+
+                  <div className="mt-6 grid gap-5 md:grid-cols-2">
+                    <div className="rounded-[1.5rem] bg-slate-50 p-4">
+                      <p className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">Symptoms</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {patient.symptoms.map((symptom) => (
+                          <span
+                            key={symptom}
+                            className="rounded-full border border-slate-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+                          >
+                            {symptom}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="rounded-[1.5rem] bg-rose-50 p-4">
+                      <p className="text-sm font-bold uppercase tracking-[0.22em] text-rose-500">Labs</p>
+                      <div className="mt-3 flex flex-wrap gap-2">
+                        {patient.labs.length ? (
+                          patient.labs.map((lab) => (
+                            <span
+                              key={lab}
+                              className="rounded-full border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-slate-700"
+                            >
+                              {lab}
+                            </span>
+                          ))
+                        ) : (
+                          <span className="rounded-full border border-rose-200 bg-white px-3 py-2 text-sm font-semibold text-slate-500">
+                            No dramatic labs. Yet.
+                          </span>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="mt-6">
+                    <p className="text-sm font-bold uppercase tracking-[0.22em] text-slate-500">Choose Their Fate</p>
+                    <div className="mt-3 grid gap-3 sm:grid-cols-2">
+                      {TRIAGE_OPTIONS.map((option) => (
+                        <button
+                          key={option}
+                          onClick={() => resolveChoice(option)}
+                          disabled={Boolean(feedback)}
+                          className="rounded-[1.25rem] border border-slate-200 bg-white px-4 py-4 text-left text-base font-bold text-slate-800 shadow-sm transition hover:-translate-y-0.5 hover:border-sky-300 hover:bg-sky-50 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          {option}
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {feedback && (
+                    <div className="mt-6 rounded-[1.5rem] border border-slate-200 bg-slate-900 p-5 text-white shadow-lg">
+                      <div className="flex flex-wrap items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-bold uppercase tracking-[0.24em] text-slate-400">
+                            {feedback.title}
+                          </p>
+                          <h3 className="mt-2 text-2xl font-black">{feedback.choice}</h3>
+                        </div>
+                        <div className="rounded-full bg-white/10 px-4 py-2 text-sm font-bold text-slate-200">
+                          {feedback.savedDelta ? "+1 life" : "+0 lives"} / {currency(feedback.moneyDelta)} damage
+                        </div>
+                      </div>
+                      <p className="mt-4 text-base leading-relaxed text-slate-100 sm:text-lg">{feedback.roast}</p>
+                    </div>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      }
+
+      ReactDOM.createRoot(document.getElementById("root")).render(<App />);
+    </script>
+  </body>
+</html>
