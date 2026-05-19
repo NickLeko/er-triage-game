@@ -4,7 +4,7 @@ ER Triage Game is a browser-based mock triage decision game built around short f
 
 ## Problem / Use Case
 
-This repo is a playable prototype for practicing fast pattern recognition in a deliberately simplified ER triage scenario. The player chooses between `Send Home with Meds`, `Urgent Care`, `Emergency Room`, and `ICU` while the game tracks outcomes and cost impact.
+This repo is a playable prototype for working through simplified triage-style choices. The player chooses between `Send Home with Meds`, `Urgent Care`, `Emergency Room`, and `ICU` while the game tracks outcomes and cost impact.
 
 The cases are fictional and the tone is parody. This is not medical advice, clinical training, or a triage tool.
 
